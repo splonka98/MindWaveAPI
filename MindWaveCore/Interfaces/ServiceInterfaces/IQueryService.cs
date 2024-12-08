@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveCore.Interfaces
+namespace MindWaveCore.Interfaces.ServiceInterfaces
 {
-    internal interface IQueryRepository
+    public interface IQueryService
     {
     }
 }
