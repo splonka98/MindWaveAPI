@@ -1,17 +1,15 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveCore.Entities
+namespace MindWaveApi.Core.Entities
 {
-    public class Answer
+    public class Question
     {
         public int Id { get; set; }
         public string Text { get; set; }
-        public Question Question { get; set; }
-        public Query Query { get; set; }
+        public ICollection<Answer> Answers { get; set; }
     }
 }

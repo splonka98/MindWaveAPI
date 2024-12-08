@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveCore.Interfaces.ServiceInterfaces
+namespace MindWaveApi.Core.Interfaces.ServiceInterfaces
 {
     public interface IUserService
     {
