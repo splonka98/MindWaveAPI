@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveApi.Core.Interfaces.RepositoryInterfaces
+namespace MindWaveApi.Aplication.RepositoryInterfaces
 {
     public interface IQueryRepository
     {
