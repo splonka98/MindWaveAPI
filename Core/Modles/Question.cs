@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveApi.Core.Entities
+namespace MindWaveApi.Domain.Models
 {
-    public class Query
+    public class Question
     {
         public int Id { get; set; }
-        public User User { get; set; }
-        public DateTime Date { get; set; }
+        public string Text { get; set; }
         public ICollection<Answer> Answers { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MindWaveApi.Core.Entities
+namespace MindWaveApi.Domain.Models
 {
     public class Answer
     {

@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace MindWaveApi.Core.Entities
+namespace MindWaveApi.Domain.Models
 {
     public class User
     {

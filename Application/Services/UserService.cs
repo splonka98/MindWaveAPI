@@ -1,5 +1,5 @@
-﻿using MindWaveApi.Core.Entities;
-using MindWaveApi.Core.Interfaces.ServiceInterfaces;
+﻿using MindWaveApi.Domain.Models;
+using MindWaveApi.Domain.Interfaces.ServiceInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
