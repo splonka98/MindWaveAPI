@@ -9,10 +9,10 @@ namespace MindWaveApi.Aplication.RepositoryInterfaces
 {
     public interface IUserRepository
     {
-        Task<User> GetUserAsync(int id);
-        Task<User> GetUserAsync(string email);
+        //Task<User> GetUserAsync(int id);
+        //Task<User> GetUserAsync(string email);
         Task CreateUserAsync(User user, string passwordHash);
-        Task UpdateUserAsync(User user);
-        Task DeleteUserAsync(int id);
+        //Task UpdateUserAsync(User user);
+        //Task DeleteUserAsync(int id);
     }
 }
