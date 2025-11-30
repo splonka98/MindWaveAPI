@@ -1,0 +1,6 @@
+@MindWaveAPI_HostAddress = http://localhost:5119
+
+GET {{MindWaveAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
