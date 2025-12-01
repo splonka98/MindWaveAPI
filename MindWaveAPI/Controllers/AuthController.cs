@@ -11,11 +11,13 @@ namespace MindWaveAPI.Controllers;
 public sealed class AuthController : ControllerBase
 {
     private readonly ILoginService _loginService;
+    private readonly IRegistrationService _registrationService;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ILoginService loginService, ILogger<AuthController> logger)
+    public AuthController(ILoginService loginService, IRegistrationService registrationService, ILogger<AuthController> logger)
     {
         _loginService = loginService;
+        _registrationService = registrationService;
         _logger = logger;
     }
 
@@ -33,6 +35,21 @@ public sealed class AuthController : ControllerBase
             Success<LoginResponse> s => Ok(s.Value),
             Failure f when f.Code == ErrorCodes.Validation => BadRequest(ToProblemDetails(f)),
             Failure f when f.Code == ErrorCodes.Unauthorized => Unauthorized(ToProblemDetails(f)),
+            Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f))
+        };
+    }
+
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(RegisterResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
+    {
+        var result = await _registrationService.RegisterAsync(request, ct);
+        return result switch
+        {
+            Success<RegisterResponse> s => Created($"/api/auth/users/{s.Value.UserId}", s.Value),
+            Failure f when f.Code == ErrorCodes.Validation => BadRequest(ToProblemDetails(f)),
             Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f))
         };
     }
