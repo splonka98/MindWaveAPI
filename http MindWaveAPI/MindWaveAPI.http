@@ -1,0 +1,9 @@
+@MindWaveAPI_HostAddress = http://localhost:5173
+
+### Health check
+GET {{MindWaveAPI_HostAddress}}/api/auth/login
+Accept: application/json
+````````
+
+
+# Response
