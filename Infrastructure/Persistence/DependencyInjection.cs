@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Application.Abstractions.Surveys;
+using Infrastructure.Surveys;
 
 namespace Infrastructure.Persistence;
 
@@ -12,6 +14,9 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString);
         });
 
+        services.AddScoped<ISurveyService, SurveyService>();
+        services.AddScoped<ISurveyQuestionProvider, DbSurveyQuestionProvider>();
+
         return services;
     }
-}   
+}
