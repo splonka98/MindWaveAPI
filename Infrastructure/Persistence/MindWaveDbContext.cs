@@ -12,6 +12,8 @@ public sealed class MindWaveDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<SurveyInstance> SurveyInstances => Set<SurveyInstance>();
+    public DbSet<SurveyTemplate> SurveyTemplates => Set<SurveyTemplate>();
+    public DbSet<SurveyQuestion> SurveyQuestions => Set<SurveyQuestion>();
     public DbSet<PairingToken> PairingTokens => Set<PairingToken>();
     public DbSet<DoctorPatientLink> DoctorPatientLinks => Set<DoctorPatientLink>();
 
@@ -46,6 +48,28 @@ public sealed class MindWaveDbContext : DbContext
             });
 
             b.Ignore(s => s.Tags);
+        });
+
+        modelBuilder.Entity<SurveyTemplate>(b =>
+        {
+            b.ToTable("survey_templates");
+            b.HasKey(t => t.Id);
+            b.Property(t => t.Name).IsRequired().HasMaxLength(64);
+            b.Property(t => t.EpisodePath).IsRequired().HasMaxLength(32);
+
+            b.HasMany(t => t.Questions)
+             .WithOne()
+             .HasForeignKey(q => q.SurveyTemplateId)
+             .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SurveyQuestion>(b =>
+        {
+            b.ToTable("survey_questions");
+            b.HasKey(q => new { q.SurveyTemplateId, q.Id });
+            b.Property(q => q.Text).IsRequired().HasMaxLength(512);
+            b.Property(q => q.Order).IsRequired();
+            b.HasIndex(q => new { q.SurveyTemplateId, q.Order }).IsUnique();
         });
 
         modelBuilder.Entity<PairingToken>().HasKey(t => t.Id);
