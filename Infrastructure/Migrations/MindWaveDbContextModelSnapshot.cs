@@ -93,6 +93,51 @@ namespace Infrastructure.Migrations
                     b.ToTable("survey_instances", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Surveys.SurveyQuestion", b =>
+                {
+                    b.Property<Guid>("SurveyTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.HasKey("SurveyTemplateId", "Id");
+
+                    b.HasIndex("SurveyTemplateId", "Order")
+                        .IsUnique();
+
+                    b.ToTable("survey_questions", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Surveys.SurveyTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EpisodePath")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("survey_templates", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -159,6 +204,20 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Domain.Surveys.SurveyQuestion", b =>
+                {
+                    b.HasOne("Domain.Surveys.SurveyTemplate", null)
+                        .WithMany("Questions")
+                        .HasForeignKey("SurveyTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Surveys.SurveyTemplate", b =>
+                {
+                    b.Navigation("Questions");
                 });
 #pragma warning restore 612, 618
         }
