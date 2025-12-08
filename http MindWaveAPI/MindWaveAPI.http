@@ -9,88 +9,37 @@ GET {{MindWaveAPI_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
-### Register patient user
+### Register user
 POST {{MindWaveAPI_HostAddress}}/api/auth/register
 Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "{{patient_email}}",
-  "password": "{{patient_password}}",
+  "email": "testJWT@example.com",
+  "password": "P@ssw0rd!",
   "role": "Patient"
 }
 
 ###
-### Login patient to obtain JWT
+### Login user
 POST {{MindWaveAPI_HostAddress}}/api/auth/login
 Content-Type: application/json
 Accept: application/json
 
 {
-  "username": "{{patient_email}}",
-  "password": "{{patient_password}}"
+  "email": "testJWT@example.com",
+  "password": "P@ssw0rd!"
 }
 
 ###
-# After login, set @jwt_token to the "token" value from the response.
-# Also set @patient_user_id to the GUID of the created user (from registration or user listing),
-# and @daily_template_id to the GUID of the "daily" template if you reference the template explicitly.
-# If your service ignores TemplateId or resolves "daily" internally, you can still pass it as stored.
-
-### Get the 4 initiating questions (optional helper)
-GET {{MindWaveAPI_HostAddress}}/api/surveys/daily/initial/questions
-Accept: application/json
-Authorization: Bearer {{jwt_token}}
-
-###
-### Submit initial 4 answers (daily survey)
+### Daily initial survey
 POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/initial
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer {{jwt_token}}
+Authorization: Bearer {{access_token}}
 
 {
-  "answers": [
-    { "questionNumber": 1, "value": 7 },
-    { "questionNumber": 2, "value": 5 },
-    { "questionNumber": 3, "value": 6 },
-    { "questionNumber": 4, "value": 8 }
-  ]
+  "answers": [/* your initial answers */]
 }
 
-###
-# Response returns:
-# - surveyInstanceId -> set @survey_instance_id
-# - nextQuestionSet ("depression" | "hypomania" | "mania") -> set @next_set
-# - nextQuestions[0..6].id (exactly 7 IDs) -> use below
-
-### Submit follow-up 7 answers (use IDs from previous response)
-POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/followup
-Content-Type: application/json
-Accept: application/json
-Authorization: Bearer {{jwt_token}}
-
-{
-  "surveyInstanceId": "{{survey_instance_id}}",
-  "nextQuestionSet": "{{next_set}}",
-  "answers": {
-    "101": "6",
-    "102": "5",
-    "103": "4",
-    "104": "3",
-    "105": "5",
-    "106": "6",
-    "107": "7"
-  }
-}
-
-###
-# Variables (edit these)
-@patient_email = patient1@example.com
-@patient_password = P@ssw0rd!
-@jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkYzgzM2U0MS1jYzc0LTRjMjMtOTZlMi05YTA3MDg2MDY3NzUiLCJlbWFpbCI6InBhdGllbnQxQGV4YW1wbGUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiUGF0aWVudCIsImp0aSI6IjZhNTM3NTUyLTcwYmYtNDg4ZS1hYWU0LWI5YjA2MDUyNzYyZCIsIm5iZiI6MTc2NTA2NjMzOCwiZXhwIjoxNzY1MDY5OTM4LCJpc3MiOiJNaW5kV2F2ZUFQSSIsImF1ZCI6Ik1pbmRXYXZlQVBJQ2xpZW50In0.iLwajYjdLJ_ezg_vc2HjKwD_YBc20NalYwrOCVyZmA4
-@patient_user_id = dc833e41-cc74-4c23-96e2-9a0708606775
-@daily_template_id = 00000000-0000-0000-0000-000000000002
-@survey_date = 2025-12-07
-@survey_instance_id = 00000000-0000-0000-0000-000000000003
-@next_set = depression
+# Response

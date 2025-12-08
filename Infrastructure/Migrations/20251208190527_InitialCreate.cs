@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,6 +56,19 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "survey_templates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    EpisodePath = table.Column<string>(type: "character varying(32)", maxLength: 32, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_survey_templates", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "users",
                 columns: table => new
                 {
@@ -92,6 +105,26 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "survey_questions",
+                columns: table => new
+                {
+                    SurveyTemplateId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Id = table.Column<int>(type: "integer", nullable: false),
+                    Text = table.Column<string>(type: "character varying(512)", maxLength: 512, nullable: false),
+                    Order = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_survey_questions", x => new { x.SurveyTemplateId, x.Id });
+                    table.ForeignKey(
+                        name: "FK_survey_questions_survey_templates_SurveyTemplateId",
+                        column: x => x.SurveyTemplateId,
+                        principalTable: "survey_templates",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_PairingTokens_Code",
                 table: "PairingTokens",
@@ -102,6 +135,12 @@ namespace Infrastructure.Migrations
                 name: "IX_survey_instances_PatientUserId_Date",
                 table: "survey_instances",
                 columns: new[] { "PatientUserId", "Date" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_survey_questions_SurveyTemplateId_Order",
+                table: "survey_questions",
+                columns: new[] { "SurveyTemplateId", "Order" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -124,10 +163,16 @@ namespace Infrastructure.Migrations
                 name: "survey_answers");
 
             migrationBuilder.DropTable(
+                name: "survey_questions");
+
+            migrationBuilder.DropTable(
                 name: "users");
 
             migrationBuilder.DropTable(
                 name: "survey_instances");
+
+            migrationBuilder.DropTable(
+                name: "survey_templates");
         }
     }
 }

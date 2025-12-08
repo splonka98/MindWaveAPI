@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(MindWaveDbContext))]
-    [Migration("20251206232701_AddSurveyTemplates")]
-    partial class AddSurveyTemplates
+    [Migration("20251208190527_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

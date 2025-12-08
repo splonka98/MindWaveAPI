@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -21,8 +21,8 @@ public sealed class LoginService : ILoginService
 
     public LoginService(MindWaveDbContext db, IConfiguration config)
     {
-        _db = db ?? throw new ArgumentNullException(nameof(db));
-        _config = config ?? throw new ArgumentNullException(nameof(config));
+        _db = db;
+        _config = config;
     }
 
     public async Task<Result> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -34,13 +34,21 @@ public sealed class LoginService : ILoginService
                 return new Failure(ErrorCodes.Validation, "Request body is required.");
             }
 
-            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            // Używamy Email zamiast Username
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
-                return new Failure(ErrorCodes.Validation, "Username and password are required.");
+                return new Failure(ErrorCodes.Validation, "Email and password are required.");
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Username, cancellationToken);
-            if (user is null || !user.VerifyPassword(request.Password))
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            if (user is null)
+            {
+                return new Failure(ErrorCodes.Unauthorized, "Invalid credentials.");
+            }
+
+            // Prosta walidacja hasła (dopasowana do RegistrationService, które zapisuje plaintext)
+            // Jeśli w projekcie jest hashing, zastąp to odpowiednim sprawdzeniem.
+            if (!user.VerifyPassword(request.Password))
             {
                 return new Failure(ErrorCodes.Unauthorized, "Invalid credentials.");
             }
@@ -64,15 +72,45 @@ public sealed class LoginService : ILoginService
                 lifetimeMinutes = 60;
             }
 
-            var claims = new[]
+            // Validate HMAC-SHA256 key strength to avoid ArgumentOutOfRangeException
+            byte[] keyBytes;
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                return new Failure(ErrorCodes.Validation, "JWT configuration is missing required values (Issuer, Audience, Key).");
+            }
+
+            // If the key is Base64, decode it; otherwise use UTF8 bytes.
+            // Adjust as needed based on how your key is stored.
+            try
+            {
+                keyBytes = Convert.TryFromBase64String(key, new Span<byte>(new byte[key.Length]), out var _)
+                    ? Convert.FromBase64String(key)
+                    : Encoding.UTF8.GetBytes(key);
+            }
+            catch
+            {
+                keyBytes = Encoding.UTF8.GetBytes(key);
+            }
+
+            // Enforce minimum key length for HS256 (recommend >= 32 bytes)
+            if (keyBytes.Length < 32)
+            {
+                return new Failure(ErrorCodes.Validation, "JWT signing key is too short. Use a key of at least 32 bytes.");
+            }
+
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            if (!string.IsNullOrWhiteSpace(user.Role))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, user.Role));
+            }
+
+            var signingKey = new SymmetricSecurityKey(keyBytes);
             var creds = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
@@ -97,9 +135,9 @@ public sealed class LoginService : ILoginService
         {
             return new Failure(ErrorCodes.Validation, "Login operation was canceled.");
         }
-        catch (Exception ex)
+        catch
         {
-            // Avoid leaking internal details; return a generic failure
+            // Zwracamy generyczny błąd bez wycieku szczegółów
             return new Failure(ErrorCodes.Unknown, "An unexpected error occurred during login.");
         }
     }
