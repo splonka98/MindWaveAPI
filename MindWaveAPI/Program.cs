@@ -5,6 +5,14 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Application.Abstractions.Auth;
 using Infrastructure.Auth;
+using Application.Abstractions.Surveys;
+using Infrastructure.Surveys;
+using Application.Abstractions.Doctors;
+using Infrastructure.Doctors;
+using System.Security.Claims;
+using Infrastructure.Users;
+using Application.Abstractions.Users;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,14 +20,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Register persistence + services (ensure connection string is set)
 var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Missing ConnectionStrings:Default");
 builder.Services.AddPersistence(connectionString);
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Register application services
+// Application services
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IRegistrationService, RegistrationService>();
+builder.Services.AddScoped<ISurveyService, SurveyService>();
+builder.Services.AddScoped<IDoctorPatientService, DoctorPatientService>();
 
 // JWT options
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -36,7 +46,7 @@ builder.Services
     })
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // set true in production behind HTTPS
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -47,7 +57,9 @@ builder.Services
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = signingKey,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = JwtRegisteredClaimNames.Sub, // use 'sub' for user id
+            RoleClaimType = ClaimTypes.Role
         };
     });
 
@@ -55,15 +67,12 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Middleware
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Routing
 app.MapControllers();
 
-// Apply migrations and seed daily survey
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MindWaveDbContext>();
