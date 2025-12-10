@@ -6,7 +6,7 @@ using Application.Contracts.Surveys;
 namespace MindWaveAPI.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/surveys")]
 public sealed class SurveysController : ControllerBase
 {
     private readonly ISurveyService _surveyService;
@@ -19,14 +19,20 @@ public sealed class SurveysController : ControllerBase
     }
 
     // Step 1: submit first four answers and receive next path and 7 follow-up question IDs
-    [HttpPost("daily/initial")]
+    [HttpPost("{template}/initial")]
     [Authorize]
     [ProducesResponseType(typeof(SubmitInitialAnswersResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> SubmitInitial([FromBody] SubmitInitialAnswersRequest request, CancellationToken ct)
+    public async Task<IActionResult> SubmitInitial(string template, [FromBody] SubmitInitialAnswersRequest request, CancellationToken ct)
     {
         try
         {
+            // If template != "daily", handle other templates, or remove this if not needed.
+            if (template != "daily")
+            {
+                return NotFound();
+            }
+
             var response = await _surveyService.SubmitInitialAnswersAsync(request, ct);
             return Ok(response);
         }
