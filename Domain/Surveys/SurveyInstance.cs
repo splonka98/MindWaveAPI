@@ -22,8 +22,15 @@ public sealed class SurveyInstance
         };
     }
 
-    public void AddAnswer(int questionId, string value)
+    public void AddAnswer(int questionId, int value)
     {
-        Answers.Add(new SurveyAnswer(questionId, value));
+        Answers.Add(SurveyAnswer.Create(
+            Guid.NewGuid(),
+            Id,
+            PatientUserId,
+            Date,
+            questionId,
+            value
+        ));
     }
 }
