@@ -1,8 +1,12 @@
+using System.Collections.Generic;
+
 namespace Application.Contracts.Surveys;
 
 public sealed class SubmitFollowupAnswersRequest
 {
     public Guid SurveyInstanceId { get; init; }
-    public string NextQuestionSet { get; init; } = string.Empty; // "mania" or "depression" (echo from initial response)
-    public Dictionary<int, string> Answers { get; init; } = new(); // 7 answers mapped by questionId
+    public Guid PatientUserId { get; init; }
+    public string Category { get; init; } = string.Empty; // "depression" | "hypomania" | "mania"
+    // Key = QuestionId, Value = numeric 1..10 string payload allowed in future, here int
+    public Dictionary<int, int> Answers { get; init; } = new();
 }
