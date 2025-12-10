@@ -5,10 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Abstractions.Auth;
+using Application.Abstractions.Users;
 using Application.Contracts.Auth;
 using Application.Contracts.Common;
-using Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -16,13 +15,13 @@ namespace Infrastructure.Auth;
 
 public sealed class LoginService : ILoginService
 {
-    private readonly MindWaveDbContext _db;
     private readonly IConfiguration _config;
+    private readonly IUserRepository _users;
 
-    public LoginService(MindWaveDbContext db, IConfiguration config)
+    public LoginService(IConfiguration config, IUserRepository users)
     {
-        _db = db;
         _config = config;
+        _users = users;
     }
 
     public async Task<Result> LoginAsync(LoginRequest request, CancellationToken cancellationToken)
@@ -34,26 +33,22 @@ public sealed class LoginService : ILoginService
                 return new Failure(ErrorCodes.Validation, "Request body is required.");
             }
 
-            // Używamy Email zamiast Username
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return new Failure(ErrorCodes.Validation, "Email and password are required.");
             }
 
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+            var user = await _users.FindByEmailAsync(request.Email, cancellationToken);
             if (user is null)
             {
                 return new Failure(ErrorCodes.Unauthorized, "Invalid credentials.");
             }
 
-            // Prosta walidacja hasła (dopasowana do RegistrationService, które zapisuje plaintext)
-            // Jeśli w projekcie jest hashing, zastąp to odpowiednim sprawdzeniem.
             if (!user.VerifyPassword(request.Password))
             {
                 return new Failure(ErrorCodes.Unauthorized, "Invalid credentials.");
             }
 
-            // Read and validate JWT settings
             var jwtSection = _config.GetSection("Jwt");
             var issuer = jwtSection["Issuer"];
             var audience = jwtSection["Audience"];
@@ -72,27 +67,24 @@ public sealed class LoginService : ILoginService
                 lifetimeMinutes = 60;
             }
 
-            // Validate HMAC-SHA256 key strength to avoid ArgumentOutOfRangeException
             byte[] keyBytes;
-            if (string.IsNullOrWhiteSpace(key))
-            {
-                return new Failure(ErrorCodes.Validation, "JWT configuration is missing required values (Issuer, Audience, Key).");
-            }
-
-            // If the key is Base64, decode it; otherwise use UTF8 bytes.
-            // Adjust as needed based on how your key is stored.
             try
             {
-                keyBytes = Convert.TryFromBase64String(key, new Span<byte>(new byte[key.Length]), out var _)
-                    ? Convert.FromBase64String(key)
-                    : Encoding.UTF8.GetBytes(key);
+                // If Base64, decode; otherwise use the raw UTF-8 bytes
+                try
+                {
+                    keyBytes = Convert.FromBase64String(key);
+                }
+                catch (FormatException)
+                {
+                    keyBytes = Encoding.UTF8.GetBytes(key);
+                }
             }
             catch
             {
                 keyBytes = Encoding.UTF8.GetBytes(key);
             }
 
-            // Enforce minimum key length for HS256 (recommend >= 32 bytes)
             if (keyBytes.Length < 32)
             {
                 return new Failure(ErrorCodes.Validation, "JWT signing key is too short. Use a key of at least 32 bytes.");
@@ -100,14 +92,14 @@ public sealed class LoginService : ILoginService
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(type: JwtRegisteredClaimNames.Sub, value: user.Id.ToString()),
+                new Claim(type:JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
             if (!string.IsNullOrWhiteSpace(user.Role))
             {
-                claims.Add(new Claim(ClaimTypes.Role, user.Role));
+                claims.Add(new Claim(type: ClaimTypes.Role, value: user.Role));
             }
 
             var signingKey = new SymmetricSecurityKey(keyBytes);

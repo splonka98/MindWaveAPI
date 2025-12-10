@@ -2,35 +2,42 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Abstractions.Auth;
+using Application.Abstractions.Users;
 using Application.Contracts.Auth;
 using Application.Contracts.Common;
 using Domain.Users;
-using Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Auth;
 
 public sealed class RegistrationService : IRegistrationService
 {
-    private readonly MindWaveDbContext _db;
+    private readonly IUserRepository _users;
 
-    public RegistrationService(MindWaveDbContext db) => _db = db;
+    public RegistrationService(IUserRepository users) => _users = users;
 
     public async Task<Result> RegisterAsync(RegisterRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+        {
             return new Failure(ErrorCodes.Validation, "Email and password are required.");
+        }
 
-        if (request.Role is not ("Patient" or "Doctor"))
-            return new Failure(ErrorCodes.Validation, "Role must be 'Patient' or 'Doctor'.");
-
-        var exists = await _db.Users.AnyAsync(u => u.Email == request.Email, ct);
-        if (exists)
+        var existing = await _users.FindByEmailAsync(request.Email, ct);
+        if (existing is not null)
+        {
             return new Failure(ErrorCodes.Validation, "Email already registered.");
+        }
 
-        var user = User.Create(Guid.NewGuid(), request.Email, request.Password, request.Role, DateTime.UtcNow);
-        _db.Users.Add(user);
-        await _db.SaveChangesAsync(ct);
+        var role = string.IsNullOrWhiteSpace(request.Role) ? "Patient" : request.Role;
+
+        var user = User.Create(Guid.NewGuid(), request.Email, role);
+        user.SetPassword(request.Password);
+
+        var saved = await _users.AddAsync(user, ct);
+        if (!saved)
+        {
+            return new Failure(ErrorCodes.Unknown, "Failed to create user.");
+        }
 
         return new Success<RegisterResponse>(new RegisterResponse
         {
