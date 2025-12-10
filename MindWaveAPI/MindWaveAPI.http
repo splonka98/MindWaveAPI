@@ -10,7 +10,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "testJWT@example.com",
+  "email": "test11JWT@example.com",
   "password": "P@ssw0rd!",
   "role": "Patient"
 }
@@ -22,7 +22,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "username": "testJWT@example.com",
+  "username": "test11JWT@example.com",
   "password": "P@ssw0rd!"
 }
 

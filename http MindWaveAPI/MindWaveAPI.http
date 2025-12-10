@@ -1,14 +1,9 @@
 @MindWaveAPI_HostAddress = http://localhost:5119
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNzMzYzQ3Ny0zYjRkLTQyMTgtOWNhMS1lMzc3MzA5YWUxZGEiLCJlbWFpbCI6InRlc3RKV1RAZXhhbXBsZS5jb20iLCJqdGkiOiIzNTcxMjk1Yy1jYzkxLTQ4NDMtODM4Ny0yMDM1ODA5MGFlZDAiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJQYXRpZW50IiwibmJmIjoxNzY1Mzc0NjU4LCJleHAiOjE3NjUzNzgyNTgsImlzcyI6Ik1pbmRXYXZlQVBJIiwiYXVkIjoiTWluZFdhdmVBUElDbGllbnRzIn0.s9OChBasiWpXE3TdRcME3oFbQHPin54RUx4O8idRFFk
+@patient_user_id = c733c477-3b4d-4218-9ca1-e377309ae1da
+@survey_instance_id = f58fd280-61eb-4a6a-8071-32dc7e0abdaf
+@category = hypomania # "depression" | "hypomania" | "mania"
 
-### Health check
-GET {{MindWaveAPI_HostAddress}}/api/auth/login
-Accept: application/json
-
-### Weather (sanity check)
-GET {{MindWaveAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
 ### Register user
 POST {{MindWaveAPI_HostAddress}}/api/auth/register
 Content-Type: application/json
@@ -20,8 +15,7 @@ Accept: application/json
   "role": "Patient"
 }
 
-###
-### Login user
+### Login user (copy token and userId from response above)
 POST {{MindWaveAPI_HostAddress}}/api/auth/login
 Content-Type: application/json
 Accept: application/json
@@ -31,15 +25,78 @@ Accept: application/json
   "password": "P@ssw0rd!"
 }
 
-###
-### Daily initial survey
+### Submit initial daily survey answers (one per day enforced)
 POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/initial
 Content-Type: application/json
 Accept: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "answers": [/* your initial answers */]
+  "date": "2025-12-10",
+  "answer1": 5,
+  "answer2": 4,
+  "answer3": 3,
+  "answer4": 6
 }
 
-# Response
+### Get category (replace with actual surveyInstanceId from initial response)
+GET {{MindWaveAPI_HostAddress}}/api/surveys/daily/{{survey_instance_id}}/category
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+### Submit follow-up for Depression
+POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/followup
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "surveyInstanceId": "<surveyInstanceId>",
+  "category": "depression",
+  "answers": {
+    "101": 4,
+    "102": 3,
+    "103": 6,
+    "104": 2,
+    "105": 5,
+    "106": 4,
+    "107": 5
+  }
+}
+
+### Submit follow-up for Hypomania
+POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/followup
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "surveyInstanceId": "<surveyInstanceId>",
+  "category": "hypomania",
+  "answers": {
+    "201": 6,
+    "202": 7,
+    "203": 3,
+    "204": 6,
+    "205": 8
+  }
+}
+
+### Submit follow-up for Mania
+POST {{MindWaveAPI_HostAddress}}/api/surveys/daily/followup
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "surveyInstanceId": "<surveyInstanceId>",
+  "category": "mania",
+  "answers": {
+    "301": 8,
+    "302": 8,
+    "303": 2,
+    "304": 7,
+    "305": 9,
+    "306": 8
+  }
+}
