@@ -35,7 +35,8 @@ public sealed class AuthController : ControllerBase
             Success<LoginResponse> s => Ok(s.Value),
             Failure f when f.Code == ErrorCodes.Validation => BadRequest(ToProblemDetails(f)),
             Failure f when f.Code == ErrorCodes.Unauthorized => Unauthorized(ToProblemDetails(f)),
-            Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f))
+            Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f)),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(new Failure(ErrorCodes.Unknown, "Unknown result")))
         };
     }
 
@@ -46,11 +47,14 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
         var result = await _registrationService.RegisterAsync(request, ct);
+
         return result switch
         {
             Success<RegisterResponse> s => Created($"/api/auth/users/{s.Value.UserId}", s.Value),
             Failure f when f.Code == ErrorCodes.Validation => BadRequest(ToProblemDetails(f)),
-            Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f))
+            Failure f when f.Code == ErrorCodes.Unauthorized => Unauthorized(ToProblemDetails(f)),
+            Failure f => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(f)),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, ToProblemDetails(new Failure(ErrorCodes.Unknown, "Unknown result")))
         };
     }
 
