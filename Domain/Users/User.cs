@@ -9,45 +9,66 @@ public sealed class User
     public Guid Id { get; private set; }
     public string Email { get; private set; } = string.Empty;
     public string PasswordHash { get; private set; } = string.Empty;
-    public string Role { get; private set; } = string.Empty;
-    public DateTime CreatedAtUtc { get; private set; }
+    public string PasswordSalt { get; private set; } = string.Empty;
+    public int PasswordIterations { get; private set; } = 0;
+    public string Role { get; private set; } = "Patient";
 
     private User() { }
 
-    public static User Create(Guid id, string email, string rawPassword, string role, DateTime createdAtUtc)
+    public static User Create(Guid id, string email, string role)
     {
-        var user = new User
+        return new User
         {
             Id = id,
             Email = email,
-            Role = role,
-            CreatedAtUtc = createdAtUtc
+            Role = role
         };
-        user.PasswordHash = HashPassword(rawPassword);
-        return user;
     }
 
-    public bool VerifyPassword(string rawPassword) => Verify(rawPassword, PasswordHash);
-
-    // Simple PBKDF2 (salt:hash format)
-    private static string HashPassword(string password)
+    public void SetPassword(string plainText, int iterations = 100_000)
     {
-        using var rng = RandomNumberGenerator.Create();
-        var salt = new byte[16];
-        rng.GetBytes(salt);
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
-        var hash = pbkdf2.GetBytes(32);
-        return $"{Convert.ToBase64String(salt)}:{Convert.ToBase64String(hash)}";
+        if (string.IsNullOrWhiteSpace(plainText))
+        {
+            throw new ArgumentException("Password cannot be empty.", nameof(plainText));
+        }
+
+        // Generate 16-byte salt
+        var saltBytes = RandomNumberGenerator.GetBytes(16);
+        var hashBytes = HashPassword(plainText, saltBytes, iterations);
+        PasswordSalt = Convert.ToBase64String(saltBytes);
+        PasswordHash = Convert.ToBase64String(hashBytes);
+        PasswordIterations = iterations;
     }
 
-    private static bool Verify(string password, string stored)
+    public bool VerifyPassword(string plainText)
     {
-        var parts = stored.Split(':');
-        if (parts.Length != 2) return false;
-        var salt = Convert.FromBase64String(parts[0]);
-        var expected = Convert.FromBase64String(parts[1]);
-        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 100_000, HashAlgorithmName.SHA256);
-        var actual = pbkdf2.GetBytes(32);
-        return CryptographicOperations.FixedTimeEquals(expected, actual);
+        if (string.IsNullOrEmpty(PasswordHash) || string.IsNullOrEmpty(PasswordSalt) || PasswordIterations <= 0)
+        {
+            return false;
+        }
+
+        var saltBytes = Convert.FromBase64String(PasswordSalt);
+        var expectedHash = Convert.FromBase64String(PasswordHash);
+        var actualHash = HashPassword(plainText, saltBytes, PasswordIterations);
+
+        return FixedTimeEquals(expectedHash, actualHash);
+    }
+
+    private static byte[] HashPassword(string password, byte[] salt, int iterations)
+    {
+        // PBKDF2 with HMAC-SHA256, 32-byte output
+        using var pbkdf2 = new Rfc2898DeriveBytes(password, salt, iterations, HashAlgorithmName.SHA256);
+        return pbkdf2.GetBytes(32);
+    }
+
+    private static bool FixedTimeEquals(ReadOnlySpan<byte> a, ReadOnlySpan<byte> b)
+    {
+        if (a.Length != b.Length) return false;
+        int diff = 0;
+        for (int i = 0; i < a.Length; i++)
+        {
+            diff |= a[i] ^ b[i];
+        }
+        return diff == 0;
     }
 }
