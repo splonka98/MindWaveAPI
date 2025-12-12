@@ -1,9 +1,9 @@
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Application.Abstractions.Surveys;
 using Application.Contracts.Surveys;
-using System.Security.Claims;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace MindWaveAPI.Controllers;
 
@@ -20,7 +20,8 @@ public sealed class DailySurveyController : ControllerBase
     public async Task<IActionResult> SubmitInitial([FromBody] SubmitInitialAnswersRequest request, CancellationToken ct)
     {
         var userIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-                        ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                        ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst("sub")?.Value;
         if (!Guid.TryParse(userIdStr, out var tokenUserId))
         {
             return Unauthorized("Missing or invalid 'sub' claim.");
@@ -53,13 +54,37 @@ public sealed class DailySurveyController : ControllerBase
     [Authorize]
     public async Task<IActionResult> SubmitFollowup([FromBody] SubmitFollowupAnswersRequest request, CancellationToken ct)
     {
-        var userIdStr = User.FindFirst("sub")?.Value;
+        var userIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                        ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst("sub")?.Value;
         if (!Guid.TryParse(userIdStr, out var tokenUserId))
         {
             return Unauthorized("Missing or invalid 'sub' claim.");
         }
 
-        // Trust the token, not the body
+        // 1) Odczytaj kategorię z initial ankiety i porównaj z żądaną
+        var initialCategory = await _surveyService.GetInitialCategoryAsync(request.SurveyInstanceId, ct);
+        if (initialCategory is null)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Invalid survey instance",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = "Initial survey not found or incomplete."
+            });
+        }
+
+        if (!string.Equals(initialCategory.Category, request.Category, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = "Category mismatch",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = $"Follow-up category '{request.Category}' does not match initial category '{initialCategory.Category}'."
+            });
+        }
+
+        // 2) Zaufaj tokenowi zamiast patientUserId z body
         var fixedRequest = new SubmitFollowupAnswersRequest
         {
             SurveyInstanceId = request.SurveyInstanceId,

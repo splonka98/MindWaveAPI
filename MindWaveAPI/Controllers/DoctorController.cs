@@ -2,6 +2,7 @@ using Application.Abstractions.Doctors;
 using Application.Contracts.Doctors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace MindWaveAPI.Controllers;
@@ -18,10 +19,12 @@ public sealed class DoctorController : ControllerBase
     [HttpPost("pair")]
     public async Task<IActionResult> PairPatient([FromBody] PairPatientRequest request, CancellationToken ct)
     {
-        var doctorIdStr = User.FindFirst("sub")?.Value;
+        var doctorIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                          ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst("sub")?.Value;
         if (!Guid.TryParse(doctorIdStr, out var doctorId))
         {
-            return Unauthorized();
+            return Unauthorized("Missing or invalid 'sub' claim.");
         }
 
         await _service.PairAsync(doctorId, request.PatientUserId, ct);
@@ -31,10 +34,12 @@ public sealed class DoctorController : ControllerBase
     [HttpGet("patient/{patientUserId:guid}/surveys")]
     public async Task<IActionResult> GetPatientSurveys([FromRoute] Guid patientUserId, [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
     {
-        var doctorIdStr = User.FindFirst("sub")?.Value;
+        var doctorIdStr = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+                          ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? User.FindFirst("sub")?.Value;
         if (!Guid.TryParse(doctorIdStr, out var doctorId))
         {
-            return Unauthorized();
+            return Unauthorized("Missing or invalid 'sub' claim.");
         }
 
         var list = await _service.GetPatientSurveysAsync(doctorId, patientUserId, from, to, ct);

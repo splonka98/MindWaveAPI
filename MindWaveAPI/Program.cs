@@ -1,4 +1,4 @@
-using Infrastructure.Persistence;
+﻿using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -10,9 +10,9 @@ using Infrastructure.Surveys;
 using Application.Abstractions.Doctors;
 using Infrastructure.Doctors;
 using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 using Infrastructure.Users;
 using Application.Abstractions.Users;
-using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,17 +58,15 @@ builder.Services
             IssuerSigningKey = signingKey,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero,
-            NameClaimType = JwtRegisteredClaimNames.Sub, // use 'sub' for user id
-            RoleClaimType = ClaimTypes.Role
+            NameClaimType = JwtRegisteredClaimNames.Sub,   // identyfikator użytkownika = 'sub'
+            RoleClaimType = ClaimTypes.Role                // rola czytana z ClaimTypes.Role
         };
     });
-
-builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
 app.UseHttpsRedirection();
-app.UseAuthentication();
+app.UseAuthentication();  // musi być przed UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();
@@ -79,5 +77,3 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
     DbSeed.SeedDailySurvey(db);
 }
-
-app.Run();

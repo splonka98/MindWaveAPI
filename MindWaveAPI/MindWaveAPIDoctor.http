@@ -1,0 +1,39 @@
+﻿@MindWaveAPI_HostAddress = http://localhost:5119
+@doctor_access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjBiZDA0Mi1mYWFiLTQ0YmEtYmRhOS1iM2IzNDQ4ZDkzMzQiLCJlbWFpbCI6ImRvY3RvcjFAZXhhbXBsZS5jb20iLCJqdGkiOiJkNTRjY2UwYy1jMWVlLTQxNmUtYjFhMi0xYjgwNTNiMjY4MjMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEb2N0b3IiLCJuYmYiOjE3NjU1Njg2OTcsImV4cCI6MTc2NTU3MjI5NywiaXNzIjoiTWluZFdhdmVBUEkiLCJhdWQiOiJNaW5kV2F2ZUFQSUNsaWVudHMifQ.U_cGT9zFkFCekZYI1f1zTp5y61DQxv9H9wm9tPdkqS4
+@patient_user_id = c733c477-3b4d-4218-9ca1-e377309ae1da
+
+### Rejestracja lekarza (rola: Doctor)
+POST {{MindWaveAPI_HostAddress}}/api/auth/register
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "doctor1@example.com",
+  "password": "P@ssw0rd!",
+  "role": "Doctor"
+}
+
+### Logowanie lekarza (email + hasło)
+POST {{MindWaveAPI_HostAddress}}/api/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "email": "doctor1@example.com",
+  "password": "P@ssw0rd!"
+}
+
+### Sparowanie lekarza z pacjentem (wymaga roli Doctor w tokenie)
+POST {{MindWaveAPI_HostAddress}}/api/doctor/pair
+Content-Type: application/json
+Accept: application/json
+Authorization: Bearer {{doctor_access_token}}
+
+{
+  "patientUserId": "{{patient_user_id}}"
+}
+
+### Podgląd wyników ankiet pacjenta z zakresu dat (wymaga parowania i roli Doctor)
+GET {{MindWaveAPI_HostAddress}}/api/doctor/patient/{{patient_user_id}}/surveys?from=2025-12-10&to=2025-12-15
+Accept: application/json
+Authorization: Bearer {{doctor_access_token}}
