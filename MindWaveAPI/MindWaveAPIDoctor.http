@@ -1,8 +1,8 @@
 ﻿@MindWaveAPI_HostAddress = http://localhost:5119
-@doctor_access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjBiZDA0Mi1mYWFiLTQ0YmEtYmRhOS1iM2IzNDQ4ZDkzMzQiLCJlbWFpbCI6ImRvY3RvcjFAZXhhbXBsZS5jb20iLCJqdGkiOiJkNTRjY2UwYy1jMWVlLTQxNmUtYjFhMi0xYjgwNTNiMjY4MjMiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEb2N0b3IiLCJuYmYiOjE3NjU1Njg2OTcsImV4cCI6MTc2NTU3MjI5NywiaXNzIjoiTWluZFdhdmVBUEkiLCJhdWQiOiJNaW5kV2F2ZUFQSUNsaWVudHMifQ.U_cGT9zFkFCekZYI1f1zTp5y61DQxv9H9wm9tPdkqS4
-@patient_user_id = c733c477-3b4d-4218-9ca1-e377309ae1da
+@doctor_access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3ZjBiZDA0Mi1mYWFiLTQ0YmEtYmRhOS1iM2IzNDQ4ZDkzMzQiLCJlbWFpbCI6ImRvY3RvcjFAZXhhbXBsZS5jb20iLCJqdGkiOiIyYTUzM2M5NS1jNDIwLTQ5NGMtOGIwMy0yMTE3ZGVjNTdlMmYiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEb2N0b3IiLCJuYmYiOjE3NjU1NzMyMDcsImV4cCI6MTc2NTU3NjgwNywiaXNzIjoiTWluZFdhdmVBUEkiLCJhdWQiOiJNaW5kV2F2ZUFQSUNsaWVudHMifQ.5fJ77FCUQWkKGr67ghs_xoAGRgBrMRBrZrDIgyg7bQI
+@patient_user_id = 06e84b40-4d92-4369-b1a2-634dfd9893e9
 
-### Rejestracja lekarza (rola: Doctor)
+### (Lekarz) Rejestracja
 POST {{MindWaveAPI_HostAddress}}/api/auth/register
 Content-Type: application/json
 Accept: application/json
@@ -13,7 +13,7 @@ Accept: application/json
   "role": "Doctor"
 }
 
-### Logowanie lekarza (email + hasło)
+### (Lekarz) Logowanie
 POST {{MindWaveAPI_HostAddress}}/api/auth/login
 Content-Type: application/json
 Accept: application/json
@@ -23,7 +23,7 @@ Accept: application/json
   "password": "P@ssw0rd!"
 }
 
-### Sparowanie lekarza z pacjentem (wymaga roli Doctor w tokenie)
+### (Lekarz) Parowanie z pacjentem
 POST {{MindWaveAPI_HostAddress}}/api/doctor/pair
 Content-Type: application/json
 Accept: application/json
@@ -33,7 +33,12 @@ Authorization: Bearer {{doctor_access_token}}
   "patientUserId": "{{patient_user_id}}"
 }
 
-### Podgląd wyników ankiet pacjenta z zakresu dat (wymaga parowania i roli Doctor)
+### (Lekarz) Podgląd skrócony (data + kategoria)
 GET {{MindWaveAPI_HostAddress}}/api/doctor/patient/{{patient_user_id}}/surveys?from=2025-12-10&to=2025-12-15
+Accept: application/json
+Authorization: Bearer {{doctor_access_token}}
+
+### (Lekarz) Podgląd pełny (wszystkie odpowiedzi)
+GET {{MindWaveAPI_HostAddress}}/api/doctor/patient/{{patient_user_id}}/surveys/answers?from=2025-12-10&to=2025-12-15
 Accept: application/json
 Authorization: Bearer {{doctor_access_token}}

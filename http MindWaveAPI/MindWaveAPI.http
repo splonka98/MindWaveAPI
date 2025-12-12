@@ -1,7 +1,7 @@
 @MindWaveAPI_HostAddress = http://localhost:5119
-@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNzMzYzQ3Ny0zYjRkLTQyMTgtOWNhMS1lMzc3MzA5YWUxZGEiLCJlbWFpbCI6InRlc3RKV1RAZXhhbXBsZS5jb20iLCJqdGkiOiIwYjM2MDI0YS1jZTlmLTRhY2QtODllNC05ZDYxMzBkNzdiZjkiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJQYXRpZW50IiwibmJmIjoxNzY1NTY4MTgyLCJleHAiOjE3NjU1NzE3ODIsImlzcyI6Ik1pbmRXYXZlQVBJIiwiYXVkIjoiTWluZFdhdmVBUElDbGllbnRzIn0.tNTgtIroYWix6HXHugewhTaLceBIHvWWWJRpQt81oUQ
-@patient_user_id = c733c477-3b4d-4218-9ca1-e377309ae1da
-@survey_instance_id = f58fd280-61eb-4a6a-8071-32dc7e0abdaf
+@access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNmU4NGI0MC00ZDkyLTQzNjktYjFhMi02MzRkZmQ5ODkzZTkiLCJlbWFpbCI6InRlc3QxMjJKV1RAZXhhbXBsZS5jb20iLCJqdGkiOiI1NTY4MWRjMC0wYzEyLTRhZjMtOGUwYi00OTIxOWJkZjZlMDEiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJQYXRpZW50IiwibmJmIjoxNzY1NTcyNzk1LCJleHAiOjE3NjU1NzYzOTUsImlzcyI6Ik1pbmRXYXZlQVBJIiwiYXVkIjoiTWluZFdhdmVBUElDbGllbnRzIn0.GiU9hisPbzJmXZPEMqbsB6YgRYry0Ijpwtw290VWuYw
+@patient_user_id = 06e84b40-4d92-4369-b1a2-634dfd9893e9
+@survey_instance_id = 69851576-ec84-44c1-9b91-12cef44e9bee
 @category = hypomania # "depression" | "hypomania" | "mania"
 
 ### Register user
@@ -10,7 +10,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "testJWT@example.com",
+  "email": "test122JWT@example.com",
   "password": "P@ssw0rd!",
   "role": "Patient"
 }
@@ -21,7 +21,7 @@ Content-Type: application/json
 Accept: application/json
 
 {
-  "email": "testJWT@example.com",
+  "email": "test122JWT@example.com",
   "password": "P@ssw0rd!"
 }
 

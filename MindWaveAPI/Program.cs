@@ -65,15 +65,21 @@ builder.Services
 
 var app = builder.Build();
 
+// Middleware
 app.UseHttpsRedirection();
-app.UseAuthentication();  // musi być przed UseAuthorization
+
+// Kolejność jest ważna:
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
+// Apply migrations and seed
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<MindWaveDbContext>();
     db.Database.Migrate();
     DbSeed.SeedDailySurvey(db);
 }
+
+app.Run();
