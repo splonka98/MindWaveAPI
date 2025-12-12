@@ -26,7 +26,8 @@ public sealed class DoctorPatientService : IDoctorPatientService
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<IReadOnlyList<PatientSurveyDto>> GetPatientSurveysAsync(Guid doctorUserId, Guid patientUserId, DateOnly from, DateOnly to, CancellationToken ct)
+    public async Task<IReadOnlyList<PatientSurveyDto>> GetPatientSurveysAsync(
+        Guid doctorUserId, Guid patientUserId, DateOnly from, DateOnly to, CancellationToken ct)
     {
         var allowed = await _db.DoctorPatientPairs.AnyAsync(p => p.DoctorUserId == doctorUserId && p.PatientUserId == patientUserId, ct);
         if (!allowed)
@@ -66,7 +67,8 @@ public sealed class DoctorPatientService : IDoctorPatientService
         return results;
     }
 
-    public async Task<IReadOnlyList<PatientSurveyWithAnswersDto>> GetPatientSurveysWithAnswersAsync(Guid doctorUserId, Guid patientUserId, DateOnly from, DateOnly to, CancellationToken ct)
+    public async Task<IReadOnlyList<PatientSurveyWithAnswersDto>> GetPatientSurveysWithAnswersAsync(
+        Guid doctorUserId, Guid patientUserId, DateOnly from, DateOnly to, CancellationToken ct)
     {
         var allowed = await _db.DoctorPatientPairs.AnyAsync(p => p.DoctorUserId == doctorUserId && p.PatientUserId == patientUserId, ct);
         if (!allowed)
