@@ -6,6 +6,7 @@ using FluentAssertions;
 using Infrastructure.Persistence;
 using Infrastructure.Surveys;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Xunit;
 
 namespace Infrastructure.Tests.Surveys;
@@ -16,7 +17,9 @@ public sealed class SurveyServiceTests
     {
         var options = new DbContextOptionsBuilder<MindWaveDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
+
         return new MindWaveDbContext(options);
     }
 

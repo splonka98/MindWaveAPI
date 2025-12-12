@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Abstractions.Auth;
@@ -28,9 +29,17 @@ public sealed class RegistrationService : IRegistrationService
             return new Failure(ErrorCodes.Validation, "Email already registered.");
         }
 
-        var role = string.IsNullOrWhiteSpace(request.Role) ? "Patient" : request.Role;
+        var roleInput = string.IsNullOrWhiteSpace(request.Role) ? "Patient" : request.Role;
 
-        var user = User.Create(Guid.NewGuid(), request.Email, role);
+        // Allowed roles and normalization
+        var allowedRoles = new[] { "Patient", "Doctor", "Admin" };
+        var normalizedRole = allowedRoles.FirstOrDefault(r => string.Equals(r, roleInput, StringComparison.OrdinalIgnoreCase));
+        if (normalizedRole is null)
+        {
+            return new Failure(ErrorCodes.Validation, "Invalid role.");
+        }
+
+        var user = User.Create(Guid.NewGuid(), request.Email, normalizedRole);
         user.SetPassword(request.Password);
 
         var saved = await _users.AddAsync(user, ct);
